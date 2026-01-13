@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { signInWithGoogle } from "../firebase";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import Navbar from "./components/Navbar";
 
 function App() {
+  const navigate = useNavigate();
+  const handleSignIn = () => {
+    signInWithGoogle().then(() => navigate("/dashboard"));
+  };
   return (
     <div>
-      <Navbar />
       <div
         className="relative w-screen h-screen min-h-screen overflow-hidden flex flex-col items-center justify-center"
         style={{ backgroundColor: "var(--color-dark)" }}
@@ -23,7 +28,7 @@ function App() {
           <h1 className="text-3xl md:text-4xl font-bold text-[color:var(--color-light)] mb-2 text-center">
             SpaceSync MEC
           </h1>
-          
+
           <p className="text-lg md:text-xl text-[color:var(--color-blue)] max-w-2xl text-center font-medium">
             SpaceSync MEC is a real-time room intelligence and micro-booking
             platform designed to eliminate unused classroom capacity on campus.
@@ -34,6 +39,7 @@ function App() {
           <button
             className="mt-4 flex items-center gap-3 px-6 py-3 rounded-lg bg-[color:var(--color-light)] text-[color:var(--color-navy)] font-semibold text-lg shadow hover:bg-[color:var(--color-blue)] hover:text-[color:var(--color-dark)] transition-colors duration-200"
             style={{ boxShadow: "0 4px 24px 0 rgba(0,0,0,0.10)" }}
+            onClick={handleSignIn}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
