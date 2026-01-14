@@ -28,8 +28,6 @@ const statusConfig = {
   occupied: { icon: XCircle, label: "Occupied", color: "text-red-600" },
 };
 
-
-
 export default function Dashboard() {
   const [rooms] = useState(initialRooms);
   return (
