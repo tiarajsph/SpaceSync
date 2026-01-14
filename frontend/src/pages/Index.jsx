@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import RoomCard from "@/components/RoomCard";
 import RoomDetailDrawer from "@/components/RoomDetailDrawer";
 import ClaimRoomDialog from "@/components/ClaimRoomDialog";
+import UploadOverlay from "@/components/Upload";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,14 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   MapPin,
   Clock,
   Users,
@@ -27,6 +36,7 @@ import {
   AlertCircle,
   XCircle,
   Radio,
+  Upload as UploadIcon,
 } from "lucide-react";
 
 // Mock room data
@@ -143,7 +153,7 @@ function LiveClock() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 text-[var(--color-light)]">
       <Clock className="h-4 w-4 text-primary" />
       <span className="font-mono text-sm">
         {time.toLocaleTimeString("en-US", {
@@ -208,7 +218,7 @@ function TopNav() {
           <LiveClock />
           <div className="hidden sm:flex items-center gap-2 text-sm">
             <Radio className="h-3 w-3 text-status-available animate-pulse-glow" />
-            <span className="text-muted-foreground">Live Campus View</span>
+            <span className="text-[var(--color-light)]">Live Campus View</span>
           </div>
         </div>
       </div>
@@ -219,9 +229,11 @@ function TopNav() {
 // Main Dashboard Component
 export default function Dashboard() {
   const [rooms, setRooms] = useState(initialRooms);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [userRole] = useState("clubLead"); // Mock: could be "student" or "clubLead"
 
   const handleRoomClick = (room) => {
@@ -271,29 +283,84 @@ export default function Dashboard() {
     { available: 0, unverified: 0, occupied: 0 }
   );
 
+  const filteredRooms =
+    statusFilter === "all"
+      ? rooms
+      : rooms.filter((room) => room.status === statusFilter);
+
   return (
     <div className="min-h-screen bg-background">
       <TopNav />
 
       <main className="container px-4 py-6">
-        {/* Status Summary */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <div
-              key={status}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${statusConfig[status].bgClass} border ${statusConfig[status].borderClass} text-[var(--color-light)]`}
+        {/* Status Filter & Actions */}
+        <div className="flex items-center justify-between mb-6 gap-3">
+          <p className="text-sm text-[var(--color-light)]">
+            Showing{" "}
+            {statusFilter === "all" ? rooms.length : statusCounts[statusFilter]}{" "}
+            rooms
+            {statusFilter !== "all" && (
+              <>
+                {" "}
+                ({statusConfig[statusFilter].emoji}{" "}
+                {statusConfig[statusFilter].label})
+              </>
+            )}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-[var(--color-light)]"
+              onClick={() => setIsUploadOpen(true)}
             >
-              <span>{statusConfig[status].emoji}</span>
-              <span className="text-sm font-medium">
-                {count} {statusConfig[status].label}
-              </span>
-            </div>
-          ))}
+              <UploadIcon className="h-4 w-4 mr-1" />
+              Upload TimeTable
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-[var(--color-light)]"
+                >
+                  <span className="text-xs font-medium uppercase">Status</span>
+                  <span>
+                    {statusFilter === "all"
+                      ? "All"
+                      : statusConfig[statusFilter].label}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="text-[var(--color-light)]"
+              >
+                <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <DropdownMenuRadioItem value="all">
+                    All ({rooms.length})
+                  </DropdownMenuRadioItem>
+                  {["available", "unverified", "occupied"].map((status) => (
+                    <DropdownMenuRadioItem key={status} value={status}>
+                      <span className="mr-1">{statusConfig[status].emoji}</span>
+                      {statusConfig[status].label} ({statusCounts[status]})
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Room Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {rooms.map((room, index) => (
+          {filteredRooms.map((room, index) => (
             <div
               key={room.id}
               className="animate-fade-in"
@@ -321,6 +388,17 @@ export default function Dashboard() {
         isOpen={isClaimDialogOpen}
         onClose={() => setIsClaimDialogOpen(false)}
         onSubmit={handleClaimRoom}
+      />
+
+      {/* Upload Timetable Overlay */}
+      <UploadOverlay
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUpload={(file) => {
+          // TODO: hook this up to your backend or storage API
+          console.log("Timetable PDF selected:", file);
+          setIsUploadOpen(false);
+        }}
       />
     </div>
   );
