@@ -19,7 +19,7 @@ const schema = {
     type: SchemaType.OBJECT,
     properties: {
       batch: { type: SchemaType.STRING },
-      day: { type: SchemaType.STRING },          // ✅ added
+      day: { type: SchemaType.STRING }, // ✅ added
       time: { type: SchemaType.STRING },
       classroom: { type: SchemaType.STRING },
       lab_location: { type: SchemaType.STRING },
@@ -42,14 +42,14 @@ async function parseTimetable(timetableText) {
 You are given a college timetable. Extract lab sessions based on the PDF content.
 
 PERIOD MAPPINGS (if mentioned in timetable):
-P1 = 9:30 to 10:30
-P2 = 10:30 to 11:30
-P3 = 11:30 to 12:30
-P4 = 12:30 to 1:30
-P5 = 1:30 to 2:30
-P6 = 2:30 to 3:30
-P7 = 3:30 to 4:30
-P8 = 4:30 to 5:30
+P1 = 9:30 am to 10:30 am
+P2 = 10:30 am to 11:30 am
+P3 = 11:30 am to 12:30 pm
+P4 = 12:30 pm to 1:30 pm
+P5 = 1:30 pm to 2:30 pm
+P6 = 2:30 pm to 3:30 pm
+P7 = 3:30 pm to 4:30 pm
+P8 = 4:30 pm to 5:30 pm
 
 If periods are mentioned, convert them to the actual time range format.
 
@@ -65,9 +65,9 @@ DAY RULES:
 - If the day is not present, DO NOT guess
 
 TIME FORMAT:
-- Extract time as "HH:MM to HH:MM" format (e.g., "2:00 to 5:00", "9:30 to 12:30")
-- Include both start and end times
-- If period notation is used (P1, P2, etc.), convert to actual time ranges using the mappings above
+- Extract time as "h:mm am/pm to h:mm am/pm" format (e.g., "2:00 pm to 5:00 pm", "9:30 am to 12:30 pm")
+- Always include "am" or "pm" for both start and end times
+- If period notation is used (P1, P2, etc.), convert to actual time ranges using the mappings above and use am/pm
 
 BATCH FORMAT:
 - Extract batch names exactly as they appear in the PDF (e.g., "S4 CSE A", "Batch 1", etc.)
@@ -91,7 +91,7 @@ Return JSON strictly in this format:
   {
     "batch": "S4 CSE A",
     "day": "Monday",
-    "time": "2:00 to 5:00",
+    "time": "2:00 pm to 5:00 pm",
     "classroom": "B201",
     "lab_location": "CS Lab 2"
   }
@@ -141,13 +141,13 @@ Fri      B202     B202     B202     B202     B202     B202
   try {
     console.log("📋 Input Timetable:");
     console.log(sampleTimetable);
-    
+
     console.log("\n⏳ Calling parseTimetable...\n");
     const result = await parseTimetable(sampleTimetable);
-    
+
     console.log("✅ Parse Result:");
     console.log(JSON.stringify(result, null, 2));
-    
+
     if (Array.isArray(result) && result.length > 0) {
       console.log(`\n📊 Found ${result.length} lab session(s):`);
       result.forEach((session, idx) => {

@@ -1,4 +1,4 @@
-const { db } = require('../config/firebase');
+const { db } = require("../config/firebase");
 
 /**
  * ROOM SCHEMA (LOCKED)
@@ -12,13 +12,13 @@ const { db } = require('../config/firebase');
 // Get all rooms
 exports.getAllRooms = async (req, res) => {
   try {
-    const snapshot = await db.collection('rooms').get();
+    const snapshot = await db.collection("rooms").get();
     const rooms = [];
 
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc) => {
       rooms.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
 
@@ -31,16 +31,16 @@ exports.getAllRooms = async (req, res) => {
 // Get room by ID
 exports.getRoomById = async (req, res) => {
   try {
-    const roomRef = db.collection('rooms').doc(req.params.id);
+    const roomRef = db.collection("rooms").doc(req.params.id);
     const roomDoc = await roomRef.get();
 
     if (!roomDoc.exists) {
-      return res.status(404).json({ message: 'Room not found' });
+      return res.status(404).json({ message: "Room not found" });
     }
 
     res.status(200).json({
       id: roomDoc.id,
-      ...roomDoc.data()
+      ...roomDoc.data(),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -53,20 +53,20 @@ exports.createRoom = async (req, res) => {
     const { room_id } = req.body;
 
     if (!room_id) {
-      return res.status(400).json({ message: 'room_id is required' });
+      return res.status(400).json({ message: "room_id is required" });
     }
 
     const roomData = {
       room_id,
-      status: 'available',
-      current_booking_id: null
+      status: "available",
+      current_booking_id: null,
     };
 
-    const roomRef = await db.collection('rooms').add(roomData);
+    const roomRef = await db.collection("rooms").add(roomData);
 
     res.status(201).json({
       id: roomRef.id,
-      ...roomData
+      ...roomData,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -77,29 +77,247 @@ exports.createRoom = async (req, res) => {
 exports.seedRooms = async (req, res) => {
   try {
     const demoRooms = [
-      { room_id: 'LH-301' },
-      { room_id: 'LH-304' },
-      { room_id: 'B201' }
+      { room_id: "LH-301" },
+      { room_id: "LH-304" },
+      { room_id: "B201" },
     ];
 
     const batch = db.batch();
 
-    demoRooms.forEach(room => {
-      const ref = db.collection('rooms').doc();
+    demoRooms.forEach((room) => {
+      const ref = db.collection("rooms").doc();
       batch.set(ref, {
         room_id: room.room_id,
-        status: 'available',
-        current_booking_id: null
+        status: "available",
+        current_booking_id: null,
       });
     });
 
     await batch.commit();
 
     res.status(201).json({
-      message: 'Rooms seeded successfully',
-      rooms: demoRooms
+      message: "Rooms seeded successfully",
+      rooms: demoRooms,
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// sync rooms from lab_windows
+async function syncRoomsFromLabWindows() {
+  // Fetch all lab_windows documents
+  const labWindowsSnapshot = await db.collection("lab_windows").get();
+
+  if (labWindowsSnapshot.empty) {
+    return {
+      success: false,
+      message: "No timetable data found",
+      stats: { total_rooms_found: 0, new_rooms_created: 0, existing_rooms: 0 },
+      new_rooms: [],
+      existing_rooms: [],
+    };
+  }
+
+  // Extract unique room_id values (rooms) - note: timetable stores as room_id
+  const roomSet = new Set();
+  const labKeywords = ["lab", "LAB", "Lab", "LABS", "Labs"];
+
+  labWindowsSnapshot.forEach((doc) => {
+    const data = doc.data();
+    // timetableController stores room_id field (not classroom)
+    const roomId = data.room_id;
+
+    if (roomId && typeof roomId === "string") {
+      // Filter out labs - check if room name contains lab keywords
+      const isLab = labKeywords.some((keyword) =>
+        roomId.toUpperCase().includes(keyword.toUpperCase())
+      );
+
+      // Only add if it's not a lab
+      if (!isLab && roomId.trim() !== "") {
+        roomSet.add(roomId.trim());
+      }
+    }
+  });
+
+  if (roomSet.size === 0) {
+    return {
+      success: false,
+      message: "No rooms found in timetable data. Only labs were detected.",
+      stats: { total_rooms_found: 0, new_rooms_created: 0, existing_rooms: 0 },
+      new_rooms: [],
+      existing_rooms: [],
+    };
+  }
+
+  // Get existing rooms to avoid duplicates
+  const existingRoomsSnapshot = await db.collection("rooms").get();
+  const existingRoomIds = new Set();
+
+  existingRoomsSnapshot.forEach((doc) => {
+    const roomData = doc.data();
+    if (roomData.room_id) {
+      existingRoomIds.add(roomData.room_id);
+    }
+  });
+
+  // Create batch for new rooms
+  const batch = db.batch();
+  const newRooms = [];
+  const updatedRooms = [];
+
+  roomSet.forEach((roomId) => {
+    if (existingRoomIds.has(roomId)) {
+      // Room already exists, skip
+      updatedRooms.push(roomId);
+    } else {
+      // Create new room
+      const roomRef = db.collection("rooms").doc();
+      batch.set(roomRef, {
+        room_id: roomId,
+        status: "available",
+        current_booking_id: null,
+        created_at: new Date(),
+        synced_from_timetable: true,
+      });
+      newRooms.push(roomId);
+    }
+  });
+
+  if (newRooms.length > 0) {
+    await batch.commit();
+  }
+
+  return {
+    success: true,
+    message: "Rooms synced successfully from timetable",
+    stats: {
+      total_rooms_found: roomSet.size,
+      new_rooms_created: newRooms.length,
+      existing_rooms: updatedRooms.length,
+    },
+    new_rooms: newRooms,
+    existing_rooms: updatedRooms,
+  };
+}
+
+// Sync rooms from timetable endpoint
+exports.syncRoomsFromTimetable = async (req, res) => {
+  try {
+    const result = await syncRoomsFromLabWindows();
+
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Sync rooms from timetable failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Export the internal function for use in other controllers
+exports.syncRoomsFromLabWindows = syncRoomsFromLabWindows;
+
+// Find free rooms at a given day and time
+exports.findFreeRoomsByDayTime = async (req, res) => {
+  try {
+    const { day, time } = req.body;
+    console.log("[DEBUG] Request received for findFreeRoomsByDayTime:", {
+      day,
+      time,
+    });
+
+    if (!day || !time) {
+      console.log("[DEBUG] Missing day or time in request body");
+      return res.status(400).json({ error: "day and time are required" });
+    }
+
+    // 1. Get all lab_windows for the given day and time
+    const labWindowsSnapshot = await db
+      .collection("lab_windows")
+      .where("day", "==", day)
+      .where("time", "==", time)
+      .get();
+
+    console.log("[DEBUG] lab_windows found:", labWindowsSnapshot.size);
+
+    // 2. Collect unique room_ids
+    const roomIds = new Set();
+    labWindowsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.room_id) roomIds.add(data.room_id);
+    });
+    console.log(
+      "[DEBUG] Unique room_ids from lab_windows:",
+      Array.from(roomIds)
+    );
+
+    if (roomIds.size === 0) {
+      console.log("[DEBUG] No room_ids found for given day/time");
+      return res.status(200).json([]);
+    }
+
+    // 3. Query bookings for these room_ids that are currently active
+    const now = new Date();
+    const bookingsSnapshot = await db
+      .collection("bookings")
+      .where("status", "==", "active")
+      .get();
+
+    console.log("[DEBUG] Active bookings found:", bookingsSnapshot.size);
+
+    const bookedRoomIds = new Set();
+    bookingsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (
+        data.room_id &&
+        data.start_time.toDate() <= now &&
+        data.expires_at.toDate() >= now
+      ) {
+        bookedRoomIds.add(data.room_id);
+      }
+    });
+    console.log(
+      "[DEBUG] Booked room Firestore IDs (from bookings):",
+      Array.from(bookedRoomIds)
+    );
+
+    // 4. Get actual room documents from rooms collection, excluding booked ones
+    const roomsSnapshot = await db.collection("rooms").get();
+    console.log("[DEBUG] Total rooms in DB:", roomsSnapshot.size);
+
+    const roomMap = new Map();
+    roomsSnapshot.forEach((doc) => {
+      const roomData = doc.data();
+      if (roomData.room_id) {
+        roomMap.set(roomData.room_id, {
+          id: doc.id,
+          ...roomData,
+        });
+      }
+    });
+    console.log(
+      "[DEBUG] Room map keys (room names):",
+      Array.from(roomMap.keys())
+    );
+
+    // 5. Only include rooms that are not currently booked (compare by Firestore doc ID)
+    const freeRooms = [];
+    roomIds.forEach((roomId) => {
+      const roomDoc = roomMap.get(roomId);
+      // Compare using Firestore doc ID, not room name
+      if (roomDoc && !bookedRoomIds.has(roomDoc.id)) {
+        freeRooms.push(roomDoc);
+      }
+    });
+    console.log("[DEBUG] Free rooms to return:", freeRooms);
+
+    res.status(200).json(freeRooms);
+  } catch (error) {
+    console.error("[ERROR] findFreeRoomsByDayTime failed:", error);
     res.status(500).json({ error: error.message });
   }
 };

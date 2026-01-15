@@ -1,0 +1,23 @@
+import { useState, useEffect } from "react";
+import { Clock } from "lucide-react";
+
+export default function LiveClock() {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2 text-[var(--color-light)]">
+      <Clock className="h-4 w-4 text-primary" />
+      <span className="font-mono text-sm">
+        {time.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </span>
+    </div>
+  );
+}

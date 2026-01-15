@@ -54,7 +54,7 @@ exports.deleteBooking = async (req, res) => {
 
 exports.bookRoom = async (req, res) => {
   const { roomId, userId } = req.body;
-
+  console.log("Booking request received:", { roomId, userId });
   if (!roomId || !userId) {
     return res.status(400).json({
       message: 'roomId and userId are required'
@@ -75,7 +75,9 @@ exports.bookRoom = async (req, res) => {
       const roomData = roomSnap.data();
 
       // 🚨 Core safety check
-      if (roomData.status !== 'available') {
+      // If status is not set, default to 'available' (for rooms that only have room_id)
+      const roomStatus = roomData.status || 'available';
+      if (roomStatus !== 'available') {
         throw new Error('Room is already occupied');
       }
 
@@ -97,7 +99,7 @@ exports.bookRoom = async (req, res) => {
         current_booking_id: bookingRef.id
       });
     });
-
+    
     res.status(201).json({
       message: 'Room booked successfully'
     });

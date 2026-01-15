@@ -1,5 +1,6 @@
 const { db } = require('../config/firebase');
 const { parseTimetable } = require('../ai/testGemini');
+const { syncRoomsFromLabWindows } = require('./roomController');
 
 const pdfjsLib = require('pdfjs-dist/legacy/build/pdf');
 
@@ -82,7 +83,27 @@ exports.uploadAndParseTimetable = async (req, res) => {
     });
 
     await firestoreBatch.commit();
-    res.json({ message: 'Success', count: parsed.length, data: parsed });
+
+    // Automatically sync rooms from the uploaded timetable
+    let roomSyncResult = null;
+    try {
+      roomSyncResult = await syncRoomsFromLabWindows();
+      console.log('Rooms synced automatically:', roomSyncResult.stats);
+    } catch (syncError) {
+      // Log error but don't fail the upload - rooms can be synced manually later
+      console.error('Auto-sync rooms failed (non-critical):', syncError.message);
+    }
+
+    res.json({ 
+      message: 'Success', 
+      count: parsed.length, 
+      data: parsed,
+      rooms_synced: roomSyncResult ? {
+        new_rooms: roomSyncResult.stats.new_rooms_created,
+        existing_rooms: roomSyncResult.stats.existing_rooms,
+        total_found: roomSyncResult.stats.total_rooms_found
+      } : null
+    });
 
   } catch (err) {
     console.error('Upload Process Failed:', err);
