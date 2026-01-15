@@ -1,23 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap");
-@import "tailwindcss";
-
-:root {
-  --color-dark: #1b262c;
-  --color-navy: #0f4c75;
-  --color-blue: #3282b8;
-  --color-light: #bbe1fa;
-}
-
-body {
-  background-color: var(--color-dark);
-  font-family: "Geist Mono", monospace;
-}
-
-/* Loader styles */
+/* HTML: <div class="loader"></div> */
 .loader {
   width: 60px;
   aspect-ratio: 2;
-  --_g: no-repeat radial-gradient(circle closest-side, var(--color-blue) 90%, transparent);
+  --_g: no-repeat radial-gradient(circle closest-side,#000 90%,#0000);
   background: 
     var(--_g) 0%   50%,
     var(--_g) 50%  50%,
