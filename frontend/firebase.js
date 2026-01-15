@@ -44,3 +44,9 @@ export function signInWithGoogle() {
       throw { errorCode, errorMessage, email, credential };
     });
 }
+
+if (import.meta.env.DEV) {
+  window.firebaseApp = app;
+  window.firebaseAuth = auth;
+  window.signInWithGoogle = signInWithGoogle;
+}

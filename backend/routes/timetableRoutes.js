@@ -1,18 +1,24 @@
+// ===== timetableRoutes.js (Updated) =====
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const { authenticate, authorize } = require('../middleware/auth');
 
 const upload = multer({
-  storage: multer.memoryStorage()
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
 const {
   uploadAndParseTimetable
 } = require('../controllers/timetableController');
 
+// Admin only
 router.post(
   '/upload',
-  upload.single('file'), // 🔴 THIS IS REQUIRED
+  authenticate,
+  authorize('admin'),
+  upload.single('file'),
   uploadAndParseTimetable
 );
 

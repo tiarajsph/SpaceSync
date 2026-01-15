@@ -281,7 +281,7 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
       }
     });
     console.log(
-      "[DEBUG] Booked room Firestore IDs (from bookings):",
+      "[DEBUG] Booked room_ids (room names from bookings):",
       Array.from(bookedRoomIds)
     );
 
@@ -304,12 +304,12 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
       Array.from(roomMap.keys())
     );
 
-    // 5. Only include rooms that are not currently booked (compare by Firestore doc ID)
+    // 5. Only include rooms that are not currently booked (compare by room_id name)
     const freeRooms = [];
     roomIds.forEach((roomId) => {
       const roomDoc = roomMap.get(roomId);
-      // Compare using Firestore doc ID, not room name
-      if (roomDoc && !bookedRoomIds.has(roomDoc.id)) {
+      // Compare using room_id (room name), not Firestore doc ID
+      if (roomDoc && !bookedRoomIds.has(roomId)) {
         freeRooms.push(roomDoc);
       }
     });

@@ -5,7 +5,8 @@ const expireBookings = require('./utils/expireBookings');
 const roomRoutes = require('./routes/roomRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
-;
+const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 
 const app = express();
@@ -18,6 +19,8 @@ app.use(express.json());
 app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/timetable', timetableRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 
 
 // Health check

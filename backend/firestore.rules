@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'admin';
+    }
+    
+    function isVerifiedRep() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'verified_rep';
+    }
+    
+    function isClubLead() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'club_lead';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && 
+             request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read their own profile
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid == userId || isAdmin());
+      
+      // Only admins can write roles
+      allow write: if isAdmin();
+    }
+
+    // Rooms collection
+    match /rooms/{roomId} {
+      // Everyone can read room availability
+      allow read: if true;
+      
+      // Only admins can create/modify rooms
+      allow write: if isAdmin();
+    }
+
+    // Bookings collection
+    match /bookings/{bookingId} {
+      // Users can read their own bookings, admins can read all
+      allow read: if isAuthenticated() && 
+                     (resource.data.user_id == request.auth.uid || isAdmin());
+      
+      // Club leads can create bookings
+      allow create: if isClubLead() || isAdmin();
+      
+      // Users can cancel their own bookings, admins can cancel any
+      allow update, delete: if isAuthenticated() && 
+                               (resource.data.user_id == request.auth.uid || isAdmin());
+    }
+
+    // Lab windows (AI-parsed timetable data)
+    match /lab_windows/{windowId} {
+      // Everyone can read
+      allow read: if true;
+      
+      // Only admins can modify
+      allow write: if isAdmin();
+    }
+
+    // Room confirmations (by class reps)
+    match /room_confirmations/{confirmId} {
+      // Everyone can read confirmations
+      allow read: if true;
+      
+      // Verified reps and admins can create confirmations
+      allow create: if isVerifiedRep() || isAdmin();
+      
+      // Only creator or admin can modify
+      allow update, delete: if isAuthenticated() && 
+                               (resource.data.confirmed_by == request.auth.uid || isAdmin());
+    }
+
+    // Analytics (admin only)
+    match /analytics/{doc} {
+      allow read, write: if isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
