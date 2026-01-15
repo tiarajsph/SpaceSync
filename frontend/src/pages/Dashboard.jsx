@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import RoomDetailDrawer from "@/components/RoomDetailDrawer";
 import ClaimRoomDialog from "@/components/ClaimRoomDialog";
 import UploadOverlay from "@/components/Upload";
@@ -22,6 +23,7 @@ export default function Dashboard() {
   } = useRooms();
 
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [showFreeRooms, setShowFreeRooms] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -98,6 +100,7 @@ export default function Dashboard() {
           showFreeRooms={showFreeRooms}
           onFindFreeRooms={handleFindFreeRooms}
           onUploadClick={() => setIsUploadOpen(true)}
+          onShowBookings={() => navigate("/bookings")}
           roomsCount={rooms.length}
         />
 
