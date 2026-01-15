@@ -60,7 +60,6 @@ export default function RoomDetailDrawer({
   room,
   isOpen,
   onClose,
-  onConfirm,
   onClaim,
   userRole,
 }) {
@@ -117,21 +116,9 @@ export default function RoomDetailDrawer({
             )}
 
             <div className="flex flex-col gap-2 sm:gap-3 pt-2 sm:pt-4">
-              {room.status !== "occupied" && (
-                <Button
-                  size="lg"
-                  className="w-full text-sm sm:text-base"
-                  onClick={() => onConfirm(room)}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Confirm Availability
-                </Button>
-              )}
-
               {userRole === "clubLead" && room.status !== "occupied" && (
                 <Button
                   size="lg"
-                  variant="secondary"
                   className="w-full text-sm sm:text-base"
                   onClick={() => onClaim(room)}
                 >
