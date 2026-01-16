@@ -231,29 +231,27 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
     });
 
     if (!day || !time) {
-      console.log("[DEBUG] Missing day or time in request body");
       return res.status(400).json({ error: "day and time are required" });
     }
 
-    // 1. Get all lab_windows for the given day and time
+    // 1. Get all lab_windows for the given day
     const labWindowsSnapshot = await db
       .collection("lab_windows")
       .where("day", "==", day)
-      .where("time", "==", time)
       .get();
 
-    console.log("[DEBUG] lab_windows found:", labWindowsSnapshot.size);
-
-    // 2. Collect unique room_ids
+    // 2. Filter lab_windows where current time is within the window
     const roomIds = new Set();
     labWindowsSnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.room_id) roomIds.add(data.room_id);
+      if (data.room_id && data.time) {
+        // Parse "12:30 to 3:30" into start and end
+        const [start, end] = data.time.split(" to ").map((t) => t.trim());
+        if (isTimeInRange(time, start, end)) {
+          roomIds.add(data.room_id);
+        }
+      }
     });
-    console.log(
-      "[DEBUG] Unique room_ids from lab_windows:",
-      Array.from(roomIds)
-    );
 
     if (roomIds.size === 0) {
       console.log("[DEBUG] No room_ids found for given day/time");
