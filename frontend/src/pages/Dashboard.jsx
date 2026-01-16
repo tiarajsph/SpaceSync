@@ -179,7 +179,7 @@ export default function Dashboard() {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUpload={async (file) => {
-          const result = await uploadTimetable(file);
+          const result = await uploadTimetable(file, userToken); // Pass userToken here
           console.log("Timetable upload result:", result);
           setIsUploadOpen(false);
         }}

@@ -100,12 +100,15 @@ export async function getCurrentUserRole(token) {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8081/api";
 
-export async function uploadTimetable(file) {
+export async function uploadTimetable(file, token) {
   const formData = new FormData();
   formData.append("file", file);
 
   const response = await fetch(`${API_BASE_URL}/timetable/upload`, {
     method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: formData,
   });
 
