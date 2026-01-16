@@ -18,6 +18,7 @@ app.use(
       "https://frontend-mauve-gamma-89.vercel.app", // Vercel Frontend
       "https://spacesync-1601.web.app", // Firebase Hosting
       "https://spacesync-1601.firebaseapp.com", // Firebase Auth Domain
+      "https://spacesync-sigma.vercel.app/"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
