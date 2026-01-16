@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Search, Upload as UploadIcon } from "lucide-react";
+import { Search, Upload as UploadIcon, BookOpen } from "lucide-react";
 
 export default function RoomActionsBar({
   showFreeRooms,
   onFindFreeRooms,
   onUploadClick,
+  onShowBookings,
   roomsCount,
 }) {
   return (
@@ -37,6 +38,16 @@ export default function RoomActionsBar({
         >
           <UploadIcon className="h-4 w-4 mr-1" />
           <span className="hidden xs:inline">Upload</span> TimeTable
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-[var(--color-light)] text-xs sm:text-sm"
+          onClick={onShowBookings}
+        >
+          <BookOpen className="h-4 w-4 mr-1" />
+          Show Booking History
         </Button>
       </div>
     </div>

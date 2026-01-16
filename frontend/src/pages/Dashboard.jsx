@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import RoomDetailDrawer from "@/components/RoomDetailDrawer";
 import ClaimRoomDialog from "@/components/ClaimRoomDialog";
 import UploadOverlay from "@/components/Upload";
@@ -9,6 +10,22 @@ import { uploadTimetable, findFreeRoomsByDayTime } from "../../api";
 import { useRooms } from "@/hooks/useRooms";
 import { useAuth } from "@/hooks/useAuth";
 import { transformRoom } from "@/utils/roomUtils";
+
+function getCurrentDayAndTime() {
+  const now = new Date();
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const day = days[now.getDay()];
+  const time = now.toTimeString().slice(0, 5); // "HH:MM"
+  return { day, time };
+}
 
 export default function Dashboard() {
   const {
@@ -22,6 +39,7 @@ export default function Dashboard() {
   } = useRooms();
 
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [showFreeRooms, setShowFreeRooms] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -30,19 +48,16 @@ export default function Dashboard() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [userRole] = useState("clubLead");
 
-  // Search params (for demo, hardcoded; you can make these dynamic)
-  const searchDay = "Friday";
-  const searchTime = "12:30 to 3:30";
-
   // Handler for Find Free Rooms button
   const handleFindFreeRooms = async () => {
     if (!showFreeRooms) {
       try {
         setIsLoadingRooms(true);
         setRoomsError(null);
+        const { day, time } = getCurrentDayAndTime();
         const freeRooms = await findFreeRoomsByDayTime({
-          day: searchDay,
-          time: searchTime,
+          day,
+          time,
         });
         const transformedRooms = freeRooms.map((room) =>
           transformRoom({ ...room, status: "available" })
@@ -98,6 +113,7 @@ export default function Dashboard() {
           showFreeRooms={showFreeRooms}
           onFindFreeRooms={handleFindFreeRooms}
           onUploadClick={() => setIsUploadOpen(true)}
+          onShowBookings={() => navigate("/bookings")}
           roomsCount={rooms.length}
         />
 
