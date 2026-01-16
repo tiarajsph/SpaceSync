@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAllBookings } from "../../api";
+import { getAuth } from "firebase/auth"; // Add this import
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,11 +126,18 @@ export default function Bookings() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // New: fetch the token
   const fetchBookings = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getAllBookings();
+      const auth = getAuth();
+      const user = auth.currentUser;
+      let token = null;
+      if (user) {
+        token = await user.getIdToken();
+      }
+      const data = await getAllBookings(token); // Pass token here
       // Sort by start_time descending (newest first)
       const sorted = data.sort((a, b) => {
         const timeA = a.start_time?.toDate

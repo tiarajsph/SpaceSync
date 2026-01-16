@@ -29,7 +29,7 @@ export default function ClaimRoomDialog({
       setError("Invalid room information");
       return;
     }
-
+    console.log("room", room);
     try {
       setIsLoading(true);
       setError(null);
@@ -59,7 +59,7 @@ export default function ClaimRoomDialog({
         purpose,
       });
 
-      await bookRoom(room.id, userId, token, duration, purpose);
+      await bookRoom(room.name, userId, token, duration, purpose);
 
       setIsSuccess(true);
 
