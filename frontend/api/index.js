@@ -316,3 +316,28 @@ export async function findFreeRoomsByDayTime({ day, time }) {
 
   return response.json();
 }
+
+export async function markRoomFree(roomId, notes = "", token) {
+  const response = await fetch(`${API_BASE_URL}/bookings/mark-free`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ roomId, notes }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Failed to mark room as free: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {
+      const errorText = await response.text().catch(() => "");
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
