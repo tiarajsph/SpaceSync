@@ -14,16 +14,19 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173", // Local Frontend
-      "https://frontend-mauve-gamma-89.vercel.app", // Vercel Frontend
-      "https://spacesync-1601.web.app", // Firebase Hosting
-      "https://spacesync-1601.firebaseapp.com", // Firebase Auth Domain
-      "https://spacesync-sigma.vercel.app/"
+      "http://localhost:5173",
+      "https://frontend-mauve-gamma-89.vercel.app",
+      "https://spacesync-1601.web.app",
+      "https://spacesync-1601.firebaseapp.com",
+      "https://spacesync-sigma.vercel.app" // ❗ NO trailing slash
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
+
 
 app.use(express.json());
 
