@@ -44,19 +44,26 @@ export default function Dashboard() {
 
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [userToken, setUserToken] = useState(null);
+
   useEffect(() => {
-    const checkAdmin = async () => {
+    const checkRole = async () => {
       if (user) {
         try {
           const token = await user.getIdToken();
+          setUserToken(token); // Save token
           const data = await getCurrentUserRole(token);
           setIsAdmin(data.role === "admin");
+          setUserRole(data.role);
         } catch {
           setIsAdmin(false);
+          setUserRole(null);
+          setUserToken(null);
         }
       }
     };
-    checkAdmin();
+    checkRole();
   }, [user]);
   const navigate = useNavigate();
 
@@ -65,7 +72,6 @@ export default function Dashboard() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [userRole] = useState("clubLead");
 
   // Handler for Find Free Rooms button
   const handleFindFreeRooms = async () => {
@@ -156,6 +162,7 @@ export default function Dashboard() {
         onConfirm={handleConfirmAvailability}
         onClaim={handleOpenClaimDialog}
         userRole={userRole}
+        userToken={userToken} // <-- add this
       />
 
       {/* Claim Room Dialog */}
