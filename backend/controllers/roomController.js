@@ -225,10 +225,6 @@ exports.syncRoomsFromLabWindows = syncRoomsFromLabWindows;
 exports.findFreeRoomsByDayTime = async (req, res) => {
   try {
     const { day, time } = req.body;
-    console.log("[DEBUG] Request received for findFreeRoomsByDayTime:", {
-      day,
-      time,
-    });
 
     if (!day || !time) {
       return res.status(400).json({ error: "day and time are required" });
@@ -245,7 +241,6 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
     labWindowsSnapshot.forEach((doc) => {
       const data = doc.data();
       if (data.room_id && data.time) {
-        // Parse "12:30 to 3:30" into start and end
         const [start, end] = data.time.split(" to ").map((t) => t.trim());
         if (isTimeInRange(time, start, end)) {
           roomIds.add(data.room_id);
@@ -254,7 +249,6 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
     });
 
     if (roomIds.size === 0) {
-      console.log("[DEBUG] No room_ids found for given day/time");
       return res.status(200).json([]);
     }
 
@@ -264,8 +258,6 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
       .collection("bookings")
       .where("status", "==", "active")
       .get();
-
-    console.log("[DEBUG] Active bookings found:", bookingsSnapshot.size);
 
     const bookedRoomIds = new Set();
     bookingsSnapshot.forEach((doc) => {
@@ -278,14 +270,9 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
         bookedRoomIds.add(data.room_id);
       }
     });
-    console.log(
-      "[DEBUG] Booked room_ids (room names from bookings):",
-      Array.from(bookedRoomIds)
-    );
 
     // 4. Get actual room documents from rooms collection, excluding booked ones
     const roomsSnapshot = await db.collection("rooms").get();
-    console.log("[DEBUG] Total rooms in DB:", roomsSnapshot.size);
 
     const roomMap = new Map();
     roomsSnapshot.forEach((doc) => {
@@ -297,31 +284,22 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
         });
       }
     });
-    console.log(
-      "[DEBUG] Room map keys (room names):",
-      Array.from(roomMap.keys())
-    );
 
     // 5. Only include rooms that are not currently booked (compare by room_id name)
     const freeRooms = [];
     roomIds.forEach((roomId) => {
       const roomDoc = roomMap.get(roomId);
-      // Compare using room_id (room name), not Firestore doc ID
       if (roomDoc && !bookedRoomIds.has(roomId)) {
         freeRooms.push(roomDoc);
       }
     });
-    console.log("[DEBUG] Free rooms to return:", freeRooms);
 
     res.status(200).json(freeRooms);
   } catch (error) {
-    console.error("[ERROR] findFreeRoomsByDayTime failed:", error);
     res.status(500).json({ error: error.message });
   }
 
-  // Helper function for time comparison
   function toMinutes(str) {
-    // Handles "HH:MM" or "H:MM" or "H:MM am/pm"
     let [time, period] = str.split(/(am|pm)/i).map((s) => s.trim());
     let [h, m] = time.split(":").map(Number);
     if (period) {

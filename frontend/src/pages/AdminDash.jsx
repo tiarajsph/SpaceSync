@@ -57,14 +57,17 @@ function AdminDash() {
     if (isAdmin && token) {
       setLoading(true);
       setError(null);
-      // Fetch users
       getAllUsers(token)
         .then((users) => setUsers(users))
-        .catch(() => setError("Failed to fetch users"));
+        .catch((err) => {
+          setError("Failed to fetch users");
+        });
       // Fetch bookings
       getAllBookings(token)
         .then((data) => setBookings(data))
-        .catch(() => setError("Failed to fetch bookings"))
+        .catch((err) => {
+          setError("Failed to fetch bookings");
+        })
         .finally(() => setLoading(false));
     }
   }, [isAdmin, token]);
@@ -110,20 +113,20 @@ function AdminDash() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-dark)] p-4">
+    <div className="min-h-screen bg-(--color-dark) p-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-[var(--color-light)] mb-6">
+        <h1 className="text-3xl font-bold text-(--color-light) mb-6">
           Admin Dashboard
         </h1>
 
         {/* Assign Role Form */}
-        <div className="bg-[var(--color-navy)]/90 rounded-xl p-6 mb-8 border border-[var(--color-blue)]/30">
-          <h2 className="text-xl font-semibold text-[var(--color-light)] mb-4">
+        <div className="bg-(--color-navy)/90 rounded-xl p-6 mb-8 border border-(--color-blue)/30">
+          <h2 className="text-xl font-semibold text-(--color-light) mb-4">
             Assign Role
           </h2>
           <form className="space-y-4" onSubmit={handleAssignRole}>
             <div>
-              <label className="block text-sm text-[var(--color-light)] mb-1">
+              <label className="block text-sm text-(--color-light) mb-1">
                 User Email
               </label>
               <input
@@ -133,11 +136,11 @@ function AdminDash() {
                 onChange={(e) =>
                   setAssignForm((f) => ({ ...f, email: e.target.value }))
                 }
-                className="w-full px-4 py-2 rounded-lg bg-[var(--color-dark)] border border-[var(--color-light)]/20 text-[var(--color-light)] placeholder-[var(--color-light)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-blue)]"
+                className="w-full px-4 py-2 rounded-lg bg-(--color-dark) border border-(--color-light)/20 text-(--color-light) placeholder-(--color-light)/40 focus:outline-none focus:ring-2 focus:ring-(--color-blue)"
               />
             </div>
             <div>
-              <label className="block text-sm text-[var(--color-light)] mb-1">
+              <label className="block text-sm text-(--color-light) mb-1">
                 Role
               </label>
               <select
@@ -145,7 +148,7 @@ function AdminDash() {
                 onChange={(e) =>
                   setAssignForm((f) => ({ ...f, role: e.target.value }))
                 }
-                className="w-full px-4 py-2 rounded-lg bg-[var(--color-dark)] border border-[var(--color-light)]/20 text-[var(--color-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-blue)]"
+                className="w-full px-4 py-2 rounded-lg bg-(--color-dark) border border-(--color-light)/20 text-(--color-light) focus:outline-none focus:ring-2 focus:ring-(--color-blue)"
               >
                 <option value="student">Student</option>
                 <option value="club_lead">Club Lead</option>
@@ -155,7 +158,7 @@ function AdminDash() {
             </div>
             {assignForm.role === "verified_rep" && (
               <div>
-                <label className="block text-sm text-[var(--color-light)] mb-1">
+                <label className="block text-sm text-(--color-light) mb-1">
                   Batch
                 </label>
                 <input
@@ -164,13 +167,13 @@ function AdminDash() {
                   onChange={(e) =>
                     setAssignForm((f) => ({ ...f, batch: e.target.value }))
                   }
-                  className="w-full px-4 py-2 rounded-lg bg-[var(--color-dark)] border border-[var(--color-light)]/20 text-[var(--color-light)] placeholder-[var(--color-light)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-blue)]"
+                  className="w-full px-4 py-2 rounded-lg bg-(--color-dark) border border-(--color-light)/20 text-(--color-light) placeholder-(--color-light)/40 focus:outline-none focus:ring-2 focus:ring-(--color-blue)"
                 />
               </div>
             )}
             {assignForm.role === "club_lead" && (
               <div>
-                <label className="block text-sm text-[var(--color-light)] mb-1">
+                <label className="block text-sm text-(--color-light) mb-1">
                   Club Name
                 </label>
                 <input
@@ -179,14 +182,14 @@ function AdminDash() {
                   onChange={(e) =>
                     setAssignForm((f) => ({ ...f, clubName: e.target.value }))
                   }
-                  className="w-full px-4 py-2 rounded-lg bg-[var(--color-dark)] border border-[var(--color-light)]/20 text-[var(--color-light)] placeholder-[var(--color-light)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--color-blue)]"
+                  className="w-full px-4 py-2 rounded-lg bg-(--color-dark) border border-(--color-light)/20 text-(--color-light) placeholder-(--color-light)/40 focus:outline-none focus:ring-2 focus:ring-(--color-blue)"
                 />
               </div>
             )}
             <button
               type="submit"
               disabled={assignLoading}
-              className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 bg-[var(--color-blue)] text-[var(--color-dark)] hover:bg-[var(--color-light)] hover:text-[var(--color-navy)]"
+              className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-200 bg-(--color-blue) text-(--color-dark) hover:bg-(--color-light) hover:text-(--color-navy)"
             >
               {assignLoading ? "Assigning..." : "Assign Role"}
             </button>
@@ -200,18 +203,18 @@ function AdminDash() {
         </div>
 
         {/* User List */}
-        <div className="bg-[var(--color-navy)]/90 rounded-xl p-6 mb-8 border border-[var(--color-blue)]/30">
-          <h2 className="text-xl font-semibold text-[var(--color-light)] mb-4">
+        <div className="bg-(--color-navy)/90 rounded-xl p-6 mb-8 border border-(--color-blue)/30">
+          <h2 className="text-xl font-semibold text-(--color-light) mb-4">
             All Users
           </h2>
           {loading ? (
-            <div className="text-[var(--color-light)]">Loading users...</div>
+            <div className="text-(--color-light)">Loading users...</div>
           ) : error ? (
             <div className="text-red-400">{error}</div>
           ) : (
-            <table className="w-full text-left text-[var(--color-light)]">
+            <table className="w-full text-left text-(--color-light)">
               <thead>
-                <tr className="border-b border-[var(--color-blue)]/30">
+                <tr className="border-b border-(--color-blue)/30">
                   <th className="py-2">Email</th>
                   <th className="py-2">Role</th>
                   <th className="py-2">Batch/Club</th>
@@ -222,7 +225,7 @@ function AdminDash() {
                 {users.map((u) => (
                   <tr
                     key={u.uid}
-                    className="border-b border-[var(--color-light)]/10"
+                    className="border-b border-(--color-light)/10"
                   >
                     <td className="py-2">{u.email}</td>
                     <td className="py-2">{u.role}</td>
@@ -247,18 +250,18 @@ function AdminDash() {
         </div>
 
         {/* Booking Overview */}
-        <div className="bg-[var(--color-navy)]/90 rounded-xl p-6 border border-[var(--color-blue)]/30">
-          <h2 className="text-xl font-semibold text-[var(--color-light)] mb-4">
+        <div className="bg-(--color-navy)/90 rounded-xl p-6 border border-(--color-blue)/30">
+          <h2 className="text-xl font-semibold text-(--color-light) mb-4">
             All Bookings
           </h2>
           {loading ? (
-            <div className="text-[var(--color-light)]">Loading bookings...</div>
+            <div className="text-(--color-light)">Loading bookings...</div>
           ) : error ? (
             <div className="text-red-400">{error}</div>
           ) : (
-            <table className="w-full text-left text-[var(--color-light)]">
+            <table className="w-full text-left text-(--color-light)">
               <thead>
-                <tr className="border-b border-[var(--color-blue)]/30">
+                <tr className="border-b border-(--color-blue)/30">
                   <th className="py-2">Room</th>
                   <th className="py-2">User</th>
                   <th className="py-2">Purpose</th>
@@ -269,10 +272,7 @@ function AdminDash() {
               </thead>
               <tbody>
                 {bookings.map((b) => (
-                  <tr
-                    key={b.id}
-                    className="border-b border-[var(--color-light)]/10"
-                  >
+                  <tr key={b.id} className="border-b border-(--color-light)/10">
                     <td className="py-2">{b.room_id}</td>
                     <td className="py-2">{b.user_email}</td>
                     <td className="py-2">{b.purpose}</td>
