@@ -318,4 +318,22 @@ exports.findFreeRoomsByDayTime = async (req, res) => {
     console.error("[ERROR] findFreeRoomsByDayTime failed:", error);
     res.status(500).json({ error: error.message });
   }
+
+  // Helper function for time comparison
+  function toMinutes(str) {
+    // Handles "HH:MM" or "H:MM" or "H:MM am/pm"
+    let [time, period] = str.split(/(am|pm)/i).map((s) => s.trim());
+    let [h, m] = time.split(":").map(Number);
+    if (period) {
+      if (/pm/i.test(period) && h < 12) h += 12;
+      if (/am/i.test(period) && h === 12) h = 0;
+    }
+    return h * 60 + (m || 0);
+  }
+  function isTimeInRange(current, start, end) {
+    const curMin = toMinutes(current);
+    const startMin = toMinutes(start);
+    const endMin = toMinutes(end);
+    return curMin >= startMin && curMin <= endMin;
+  }
 };
