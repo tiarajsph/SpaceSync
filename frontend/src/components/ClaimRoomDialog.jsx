@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { auth } from "../../firebase";
 import {
   Dialog,
   DialogContent,
@@ -41,13 +42,24 @@ export default function ClaimRoomDialog({
         return;
       }
 
+      // Get Firebase ID token
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setError("User not authenticated. Please sign in again.");
+        setIsLoading(false);
+        return;
+      }
+      const token = await currentUser.getIdToken();
+
       console.log("Booking room:", {
         roomId: room.id,
         roomName: room.name,
         userId,
+        duration,
+        purpose,
       });
 
-      await bookRoom(room.id, userId);
+      await bookRoom(room.id, userId, token, duration, purpose);
 
       setIsSuccess(true);
 

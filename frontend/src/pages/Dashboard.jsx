@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import RoomDetailDrawer from "@/components/RoomDetailDrawer";
 import ClaimRoomDialog from "@/components/ClaimRoomDialog";
@@ -6,7 +6,11 @@ import UploadOverlay from "@/components/Upload";
 import TopNav from "@/components/TopNav";
 import RoomActionsBar from "@/components/RoomActionsBar";
 import RoomGrid from "@/components/RoomGrid";
-import { uploadTimetable, findFreeRoomsByDayTime } from "../../api";
+import {
+  uploadTimetable,
+  findFreeRoomsByDayTime,
+  getCurrentUserRole,
+} from "../../api";
 import { useRooms } from "@/hooks/useRooms";
 import { useAuth } from "@/hooks/useAuth";
 import { transformRoom } from "@/utils/roomUtils";
@@ -39,6 +43,21 @@ export default function Dashboard() {
   } = useRooms();
 
   const { user, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+          const data = await getCurrentUserRole(token);
+          setIsAdmin(data.role === "admin");
+        } catch {
+          setIsAdmin(false);
+        }
+      }
+    };
+    checkAdmin();
+  }, [user]);
   const navigate = useNavigate();
 
   const [showFreeRooms, setShowFreeRooms] = useState(false);
@@ -115,6 +134,8 @@ export default function Dashboard() {
           onUploadClick={() => setIsUploadOpen(true)}
           onShowBookings={() => navigate("/bookings")}
           roomsCount={rooms.length}
+          isAdmin={isAdmin}
+          onAdminDash={() => navigate("/admin")}
         />
 
         <RoomGrid
