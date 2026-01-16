@@ -7,6 +7,8 @@ export default function RoomActionsBar({
   onUploadClick,
   onShowBookings,
   roomsCount,
+  isAdmin,
+  onAdminDash,
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
@@ -39,6 +41,17 @@ export default function RoomActionsBar({
           <UploadIcon className="h-4 w-4 mr-1" />
           <span className="hidden xs:inline">Upload</span> TimeTable
         </Button>
+
+        {isAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-[var(--color-blue)] border-[var(--color-blue)] border-2 text-xs sm:text-sm font-semibold"
+            onClick={onAdminDash}
+          >
+            Admin Dashboard
+          </Button>
+        )}
 
         <Button
           variant="outline"
